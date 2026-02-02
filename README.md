@@ -4,13 +4,7 @@ A reusable collection of Claude Code agents and skills that can be pulled into a
 
 ## Installation
 
-### Option 1: Git Submodule (Recommended)
-
-```bash
-git submodule add <repo-url> .claude/extensions
-```
-
-### Option 2: Symlink
+### Option 1: Symlink (Recommended)
 
 ```bash
 git clone <repo-url> ~/claude-agents
@@ -18,9 +12,11 @@ ln -s ~/claude-agents/agents .claude/agents
 ln -s ~/claude-agents/skills .claude/skills
 ```
 
-### Option 3: Copy
+This keeps the shared agents/skills separate from your project, allowing you to add your own custom agents and skills alongside.
 
-Copy the `agents/` and `skills/` directories into your project's `.claude/` directory.
+### Option 2: Copy
+
+Copy the `agents/` and `skills/` directories into your project's `.claude/` directory. Full control, but no upstream updates.
 
 ---
 
