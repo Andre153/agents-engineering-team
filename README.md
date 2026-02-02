@@ -1,112 +1,129 @@
-# Claude Code Agents & Skills
+# Engineering Team CLI
 
-A reusable collection of Claude Code agents and skills that can be pulled into any project.
+A CLI tool to configure Claude Code agents and skills for your projects.
 
 ## Installation
 
-### Option 1: Symlink (Recommended)
+### Using uv (Recommended)
 
 ```bash
-git clone <repo-url> ~/claude-agents
-ln -s ~/claude-agents/agents .claude/agents
-ln -s ~/claude-agents/skills .claude/skills
+# Clone the repository
+git clone <repo-url>
+cd <repo-name>
+
+# Install with uv
+uv sync
+
+# Run the CLI
+uv run engineering-team --help
 ```
 
-This keeps the shared agents/skills separate from your project, allowing you to add your own custom agents and skills alongside.
+### Using pip
 
-### Option 2: Copy
+```bash
+pip install git+<repo-url>
+engineering-team --help
+```
 
-Copy the `agents/` and `skills/` directories into your project's `.claude/` directory. Full control, but no upstream updates.
+### Global Installation with uv
 
----
+```bash
+uv tool install git+<repo-url>
+engineering-team --help
+```
+
+## Quick Start
+
+```bash
+# Initialize a project with agents and skills
+uv run engineering-team init
+
+# List available agents and skills
+uv run engineering-team list
+
+# Update installed agents/skills to latest versions
+uv run engineering-team sync
+```
+
+## Commands
+
+### `engineering-team init`
+
+Interactive setup that:
+1. Prompts you to select agents
+2. Prompts you to select skills by category
+3. Creates `engineering-team.json` in your project
+4. Copies selected files to `.claude/agents/` and `.claude/skills/`
+
+```bash
+uv run engineering-team init
+uv run engineering-team init -d /path/to/project  # Specify project directory
+uv run engineering-team init -f                   # Force reconfiguration
+```
+
+### `engineering-team sync`
+
+Re-copies all configured agents and skills from the CLI package, updating them to the latest versions.
+
+```bash
+uv run engineering-team sync
+uv run engineering-team sync -d /path/to/project  # Specify project directory
+```
+
+### `engineering-team list`
+
+Lists all available agents and skills.
+
+```bash
+uv run engineering-team list           # Pretty tables
+uv run engineering-team list --json    # JSON output
+uv run engineering-team list --agents  # Agents only
+uv run engineering-team list --skills  # Skills only
+```
+
+## Configuration
+
+The `engineering-team.json` file stores your project's configuration:
+
+```json
+{
+  "version": "1.0",
+  "agents": ["backend-architect", "senior-backend-developer"],
+  "skills": ["typescript", "mermaid"],
+  "installedAt": "2026-02-02T12:00:00Z",
+  "cliVersion": "0.1.0"
+}
+```
 
 ## Available Agents
 
-### senior-backend-developer
-
-A senior polyglot backend developer for implementation.
-
-- **Backend Development**: RESTful/GraphQL APIs, microservices, event-driven architecture
-- **Architecture**: Domain-Driven Design (DDD), Vertical Slice Architecture, CQRS
-- **Databases**: Relational (PostgreSQL) and Document (MongoDB/Firestore)
-- **Best Practices**: SOLID principles, clean code, security-first
-
-**Usage:**
-```
-Use the senior-backend-developer agent to implement the order management API in TypeScript
-```
-
----
-
-### backend-architect
-
-A senior backend architect for planning and design (read-only, doesn't write code).
-
-- **System Design**: Service boundaries, data flow, infrastructure patterns
-- **Feature Architecture**: Component design, API contracts, integration points
-- **Documentation**: Technical plans with Mermaid diagrams
-- **Handoff**: Creates implementation specs for developer agents
-
-**Usage:**
-```
-Use the backend-architect agent to design the authentication system architecture
-```
-
-**Workflow**: Architect creates plan → hands off to developer agent for implementation.
-
----
-
-### senior-mobile-developer
-
-A senior mobile developer specializing in hybrid cross-platform solutions (iOS and Android).
-
-- **Cross-Platform**: Flutter (primary), React Native
-- **Architecture**: Vertical Slice Architecture, Domain-Driven Design, separation of concerns
-- **State Management**: BLoC/Cubit patterns, unidirectional data flow
-- **Philosophy**: Simplicity first, elegant and maintainable solutions
-
-**Usage:**
-```
-Use the senior-mobile-developer agent to implement the user profile feature in Flutter
-```
-
----
+| Agent | Description |
+|-------|-------------|
+| `backend-architect` | Senior backend architect for system design, technical planning, and architecture diagrams. Read-only, hands off to developers. |
+| `senior-backend-developer` | Senior polyglot backend developer for API development, DDD, and vertical slice architecture. |
+| `mobile-architect` | Senior mobile architect for cross-platform system design and mobile architecture. |
+| `senior-mobile-developer` | Senior mobile developer for Flutter/React Native implementation. |
 
 ## Available Skills
 
-### typescript
+### Languages
+- **typescript** - TypeScript development patterns, type system, async programming, testing
 
-TypeScript development expertise for backend and full-stack applications. Covers type system patterns, async programming, error handling, testing, and project architecture.
+### Frameworks
+- **flutter** - Flutter with Material Design, BLoC/Cubit, GoRouter navigation
 
----
+### Databases
+- **database-firestore** - Firestore data modeling, queries, security rules
 
-### flutter
+### Design & Documentation
+- **mermaid** - Mermaid diagramming for architecture documentation
 
-Flutter development with Material Design 3, BLoC/Cubit state management, and GoRouter navigation. Covers widget composition, state patterns, typed routing, theming, and testing.
-
----
-
-### mermaid
-
-Mermaid diagramming for architecture documentation and technical planning. Covers flowcharts, sequence diagrams, ERDs, class diagrams, and state diagrams.
-
----
-
-### gcp-cloud-firebase
-
-Google Cloud Platform and Firebase development. Covers Cloud Run, Authentication, Storage, Functions, and Hosting.
-
----
-
-### database-firestore
-
-Firestore database design, querying, and best practices. Covers data modeling, compound queries, pagination, indexing, and security rules.
-
----
+### Cloud & Infrastructure
+- **gcp-cloud-firebase** - GCP and Firebase services (Cloud Run, Auth, Storage, Functions)
 
 ## Using Skills with Agents
 
-### Preload skills in agent frontmatter:
+Skills can be preloaded in agent frontmatter:
 
 ```yaml
 ---
@@ -114,52 +131,52 @@ name: senior-backend-developer
 skills:
   - typescript
   - gcp-cloud-firebase
-  - database-firestore
 ---
 ```
 
-### Or mention in prompt:
+Or mentioned in prompts:
 
 ```
-Use the senior-backend-developer agent with the typescript and gcp-cloud-firebase skills to build the user API
+Use the senior-backend-developer agent with the typescript skill to build the user API
 ```
 
----
+## Development
 
-## Creating New Agents
+```bash
+# Clone and install
+git clone <repo-url>
+cd <repo-name>
+uv sync
 
-```markdown
----
-name: my-agent
-description: What this agent does and when to use it
-tools: Read, Write, Edit, Glob, Grep, Bash
-model: sonnet
-skills:
-  - typescript
----
+# Run CLI
+uv run engineering-team --help
 
-Your agent instructions here...
+# Run tests
+uv run pytest
 ```
 
-## Creating New Skills
+## Project Structure
 
-Each skill requires a `SKILL.md` file (under 500 lines) with optional `references/` for detailed docs and `assets/` for templates.
+```
+├── pyproject.toml              # Package configuration
+├── .python-version             # Python version pin (3.12)
+├── src/engineering_team/       # CLI source code
+│   ├── cli.py                  # Main Typer CLI
+│   ├── commands/               # init, sync, list commands
+│   ├── core/                   # Config, registry, copier
+│   ├── ui/                     # Interactive prompts
+│   └── data/                   # Bundled agents and skills
+│       ├── agents/
+│       └── skills/
+├── agents/                     # Source agent definitions (for reference)
+├── skills/                     # Source skill definitions (for reference)
+├── docs/                       # Documentation
+└── tests/                      # Test files
+```
 
----
+## Documentation
 
-## Roadmap
-
-### Planned Agents
-- [ ] Frontend developer (React)
-- [ ] DevOps engineer (Docker, CI/CD)
-
-### Planned Skills
-- [ ] Python
-- [ ] NestJS
-- [ ] PostgreSQL
-- [ ] Docker
-
----
+- [Publishing to PyPI](docs/publishing.md) - How to publish the package
 
 ## License
 
