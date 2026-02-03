@@ -63,6 +63,9 @@ def select_agents(agents: List[AgentInfo], preselected: Optional[List[str]] = No
     return selected or []
 
 
+DONE_SELECTING = "__DONE__"
+
+
 def select_skill_category(categories: List[SkillCategory]) -> Optional[str]:
     """Display menu to select a skill category."""
     if not categories:
@@ -75,7 +78,7 @@ def select_skill_category(categories: List[SkillCategory]) -> Optional[str]:
         )
         for cat in categories
     ]
-    choices.append(questionary.Choice(title="Done selecting skills", value=None))
+    choices.append(questionary.Choice(title="Done selecting skills", value=DONE_SELECTING))
 
     return questionary.select(
         "Select a skill category:",
@@ -135,8 +138,8 @@ def interactive_skill_selection(
 
         category_name = select_skill_category(categories)
 
-        if category_name is None:
-            # User chose "Done"
+        if category_name is None or category_name == DONE_SELECTING:
+            # User chose "Done" or cancelled
             break
 
         # Find the selected category

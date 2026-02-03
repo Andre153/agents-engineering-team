@@ -4,33 +4,15 @@ A CLI tool to configure Claude Code agents and skills for your projects.
 
 ## Installation
 
-### Using uv (Recommended)
-
 ```bash
-# Clone the repository
-git clone <repo-url>
-cd <repo-name>
-
-# Install with uv
-uv sync
-
-# Run the CLI
-uv run engineering-team --help
-```
-
-### Using pip
-
-```bash
-pip install git+<repo-url>
-engineering-team --help
-```
-
-### Global Installation with uv
-
-```bash
+# Install globally with uv
 uv tool install git+<repo-url>
+
+# Verify installation
 engineering-team --help
 ```
+
+For local development setup and alternative installation methods, see [docs/local.md](docs/local.md).
 
 ## Quick Start
 
@@ -142,18 +124,7 @@ Use the senior-backend-developer agent with the typescript skill to build the us
 
 ## Development
 
-```bash
-# Clone and install
-git clone <repo-url>
-cd <repo-name>
-uv sync
-
-# Run CLI
-uv run engineering-team --help
-
-# Run tests
-uv run pytest
-```
+See [docs/local.md](docs/local.md) for development setup instructions.
 
 ## Project Structure
 
@@ -168,14 +139,13 @@ uv run pytest
 │   └── data/                   # Bundled agents and skills
 │       ├── agents/
 │       └── skills/
-├── agents/                     # Source agent definitions (for reference)
-├── skills/                     # Source skill definitions (for reference)
 ├── docs/                       # Documentation
 └── tests/                      # Test files
 ```
 
 ## Documentation
 
+- [Local Development & Installation](docs/local.md) - Development setup and installation options
 - [Publishing to PyPI](docs/publishing.md) - How to publish the package
 
 ## License
