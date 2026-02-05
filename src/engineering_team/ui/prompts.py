@@ -7,7 +7,7 @@ from typing import List, Optional, Set
 import questionary
 from questionary import Style
 
-from ..core.schema import AgentInfo, Registry, SkillCategory, SkillInfo
+from ..core.schema import AgentInfo, Registry, SkillCategory, SkillInfo, StackItem
 
 
 # Custom style for prompts
@@ -28,10 +28,189 @@ CUSTOM_STYLE = Style(
 def confirm_reconfigure() -> bool:
     """Ask user if they want to reconfigure existing installation."""
     return questionary.confirm(
-        "engineering-team.json already exists. Do you want to reconfigure?",
+        "engineering-team.db already exists. Do you want to reconfigure?",
         default=False,
         style=CUSTOM_STYLE,
     ).ask()
+
+
+# =============================================================================
+# Project Stack Prompts
+# =============================================================================
+
+COMMON_LANGUAGES = [
+    "Python",
+    "TypeScript",
+    "JavaScript",
+    "Go",
+    "Rust",
+    "Java",
+    "Kotlin",
+    "Swift",
+    "C#",
+    "Ruby",
+    "PHP",
+    "Dart",
+]
+
+COMMON_FRAMEWORKS = [
+    "React",
+    "Next.js",
+    "Vue",
+    "Angular",
+    "Svelte",
+    "Django",
+    "FastAPI",
+    "Flask",
+    "Express",
+    "NestJS",
+    "Spring Boot",
+    "Rails",
+    "Laravel",
+    "Flutter",
+    ".NET",
+]
+
+COMMON_DATABASES = [
+    "PostgreSQL",
+    "MySQL",
+    "SQLite",
+    "MongoDB",
+    "Redis",
+    "Firestore",
+    "DynamoDB",
+    "Supabase",
+]
+
+COMMON_CLOUD = [
+    "AWS",
+    "GCP",
+    "Azure",
+    "Vercel",
+    "Netlify",
+    "Cloudflare",
+    "DigitalOcean",
+    "Firebase",
+]
+
+
+def select_stack_items(
+    stack_type: str,
+    options: List[str],
+    preselected: Optional[List[str]] = None
+) -> List[str]:
+    """Select stack items from a list of common options."""
+    choices = [
+        questionary.Choice(title=opt, value=opt, checked=preselected and opt in preselected)
+        for opt in options
+    ]
+    choices.append(questionary.Choice(title="(Other - add custom)", value="__OTHER__"))
+
+    selected = questionary.checkbox(
+        f"Select {stack_type}:",
+        choices=choices,
+        style=CUSTOM_STYLE,
+        instruction="(Use arrow keys, <space> to select, <enter> to confirm)",
+    ).ask()
+
+    if selected is None:
+        return []
+
+    # Handle custom entry
+    if "__OTHER__" in selected:
+        selected.remove("__OTHER__")
+        custom = questionary.text(
+            f"Enter custom {stack_type} (comma-separated):",
+            style=CUSTOM_STYLE,
+        ).ask()
+        if custom:
+            selected.extend([c.strip() for c in custom.split(",") if c.strip()])
+
+    return selected
+
+
+def prompt_version(item_name: str) -> Optional[str]:
+    """Prompt for a version number (optional)."""
+    version = questionary.text(
+        f"Version for {item_name} (press Enter to skip):",
+        style=CUSTOM_STYLE,
+    ).ask()
+    return version if version else None
+
+
+def select_project_stack(preselected: Optional[List[StackItem]] = None) -> List[StackItem]:
+    """Interactive selection of project tech stack."""
+    stack_items: List[StackItem] = []
+
+    # Build preselected lookup
+    preselected_by_type: dict[str, List[str]] = {
+        "language": [],
+        "framework": [],
+        "database": [],
+        "cloud": [],
+    }
+    if preselected:
+        for item in preselected:
+            preselected_by_type[item.stack_type].append(item.name)
+
+    questionary.print("\n[Project Stack Configuration]", style="bold")
+    questionary.print("Select the technologies used in your project.\n", style="fg:gray")
+
+    # Languages
+    languages = select_stack_items("languages", COMMON_LANGUAGES, preselected_by_type["language"])
+    for lang in languages:
+        version = prompt_version(lang)
+        stack_items.append(StackItem(stack_type="language", name=lang, version=version))
+
+    # Frameworks
+    frameworks = select_stack_items("frameworks", COMMON_FRAMEWORKS, preselected_by_type["framework"])
+    for fw in frameworks:
+        version = prompt_version(fw)
+        stack_items.append(StackItem(stack_type="framework", name=fw, version=version))
+
+    # Databases
+    databases = select_stack_items("databases", COMMON_DATABASES, preselected_by_type["database"])
+    for db in databases:
+        version = prompt_version(db)
+        stack_items.append(StackItem(stack_type="database", name=db, version=version))
+
+    # Cloud providers
+    cloud = select_stack_items("cloud providers", COMMON_CLOUD, preselected_by_type["cloud"])
+    for provider in cloud:
+        stack_items.append(StackItem(stack_type="cloud", name=provider))
+
+    return stack_items
+
+
+def display_stack_summary(stack_items: List[StackItem]) -> None:
+    """Display a summary of selected stack items."""
+    if not stack_items:
+        questionary.print("  Stack: (none configured)", style="fg:gray")
+        return
+
+    by_type: dict[str, List[str]] = {
+        "language": [],
+        "framework": [],
+        "database": [],
+        "cloud": [],
+    }
+
+    for item in stack_items:
+        display = item.name
+        if item.version:
+            display += f" ({item.version})"
+        by_type[item.stack_type].append(display)
+
+    labels = {
+        "language": "Languages",
+        "framework": "Frameworks",
+        "database": "Databases",
+        "cloud": "Cloud",
+    }
+
+    for stack_type, items in by_type.items():
+        if items:
+            questionary.print(f"  {labels[stack_type]}: {', '.join(items)}", style="fg:cyan")
 
 
 def select_agents(agents: List[AgentInfo], preselected: Optional[List[str]] = None) -> List[str]:
@@ -160,7 +339,11 @@ def interactive_skill_selection(
     return list(selected_skills)
 
 
-def confirm_installation(agents: List[str], skills: List[str]) -> bool:
+def confirm_installation(
+    agents: List[str],
+    skills: List[str],
+    stack_items: Optional[List[StackItem]] = None
+) -> bool:
     """Confirm the installation selections."""
     questionary.print("\nYou have selected:", style="bold")
 
@@ -173,6 +356,9 @@ def confirm_installation(agents: List[str], skills: List[str]) -> bool:
         questionary.print(f"  Skills: {', '.join(skills)}", style="fg:cyan")
     else:
         questionary.print("  Skills: (none)", style="fg:gray")
+
+    if stack_items is not None:
+        display_stack_summary(stack_items)
 
     questionary.print("")
 

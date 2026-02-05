@@ -2,10 +2,20 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
+
+
+StackType = Literal["language", "framework", "database", "cloud"]
+
+
+class StackItem(BaseModel):
+    """A technology stack item (language, framework, database, or cloud service)."""
+
+    stack_type: StackType
+    name: str
+    version: Optional[str] = None
 
 
 class AgentInfo(BaseModel):
@@ -36,19 +46,6 @@ class SkillCategory(BaseModel):
     name: str
     display_name: str
     skills: List[SkillInfo] = Field(default_factory=list)
-
-
-class ProjectConfig(BaseModel):
-    """Configuration stored in engineering-team.json."""
-
-    version: str = "1.0"
-    agents: List[str] = Field(default_factory=list)
-    skills: List[str] = Field(default_factory=list)
-    installed_at: datetime = Field(default_factory=datetime.now)
-    cli_version: str = "0.1.0"
-
-    class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
 
 
 class Registry(BaseModel):

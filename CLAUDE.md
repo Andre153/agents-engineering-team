@@ -33,8 +33,8 @@ src/engineering_team/
 │   ├── sync.py         # Re-copy agents/skills to project
 │   └── list.py         # Display available agents/skills
 ├── core/
-│   ├── schema.py       # Pydantic models (AgentInfo, SkillInfo, ProjectConfig)
-│   ├── config.py       # engineering-team.json read/write
+│   ├── schema.py       # Pydantic models (AgentInfo, SkillInfo, StackItem)
+│   ├── database.py     # SQLite database handling and repository layer
 │   ├── registry.py     # Discover agents/skills from data/ directory
 │   └── copier.py       # Copy files to .claude/ directory
 ├── ui/
@@ -53,13 +53,13 @@ src/engineering_team/
 
 - `pyproject.toml` - Package config, dependencies, entry point
 - `.python-version` - Pins Python 3.12 for uv
-- `engineering-team.json` - Created in target projects, stores selections
+- `engineering-team.db` - SQLite database created in target projects, stores selections and project stack
 
 ## Data Flow
 
 1. **Registry** (`core/registry.py`) discovers agents/skills from `data/` by parsing YAML frontmatter
-2. **Prompts** (`ui/prompts.py`) present interactive selection using questionary
-3. **Config** (`core/config.py`) saves selections to `engineering-team.json`
+2. **Prompts** (`ui/prompts.py`) present interactive selection using questionary (includes project stack selection)
+3. **Database** (`core/database.py`) saves selections to `engineering-team.db` SQLite database
 4. **Copier** (`core/copier.py`) copies selected files to `.claude/agents/` and `.claude/skills/`
 
 ## Adding New Agents

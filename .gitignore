@@ -40,3 +40,4 @@ htmlcov/
 # Installed files in target projects
 .claude/
 engineering-team.json
+engineering-team.db

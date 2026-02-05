@@ -1,23 +1,33 @@
 """Init command for engineering-team CLI."""
 
-from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
 import typer
 from rich.console import Console
 
-from ..core.config import config_exists, load_config, save_config
 from ..core.copier import copy_agents, copy_skills
+from ..core.database import (
+    db_exists,
+    get_agents,
+    get_or_create_project,
+    get_project,
+    get_skills,
+    get_stack,
+    init_database,
+    set_agents,
+    set_skills,
+    set_stack,
+    update_project_timestamp,
+)
 from ..core.registry import build_registry
-from ..core.schema import ProjectConfig
 from ..ui.prompts import (
     confirm_installation,
     confirm_reconfigure,
     interactive_skill_selection,
     select_agents,
+    select_project_stack,
 )
-from .. import __version__
 
 
 console = Console()
@@ -41,15 +51,14 @@ def init_command(
     if project_dir is None:
         project_dir = Path.cwd()
 
-    # Check for existing configuration
-    if config_exists(project_dir):
+    # Check for existing database
+    existing_project = None
+    if db_exists(project_dir):
         if not force:
             if not confirm_reconfigure():
                 console.print("[yellow]Aborted.[/yellow]")
                 raise typer.Exit(0)
-        existing_config = load_config(project_dir)
-    else:
-        existing_config = None
+        existing_project = get_project(project_dir)
 
     # Build registry of available agents and skills
     registry = build_registry()
@@ -58,31 +67,46 @@ def init_command(
         console.print("[red]Error: No agents or skills found in the package.[/red]")
         raise typer.Exit(1)
 
+    # Get preselected values from existing config
+    preselected_agents = None
+    preselected_skills = None
+    preselected_stack = None
+
+    if existing_project:
+        project_id = existing_project["id"]
+        preselected_agents = get_agents(project_id, project_dir)
+        preselected_skills = get_skills(project_id, project_dir)
+        preselected_stack = get_stack(project_id, project_dir)
+
+    # Interactive project stack selection
+    selected_stack = select_project_stack(preselected_stack)
+
     # Interactive agent selection
-    preselected_agents = existing_config.agents if existing_config else None
     selected_agents = select_agents(registry.agents, preselected_agents)
 
     # Interactive skill selection (category-based)
-    preselected_skills = existing_config.skills if existing_config else None
     selected_skills = interactive_skill_selection(registry, preselected_skills)
 
     # Confirm selections
-    if not confirm_installation(selected_agents, selected_skills):
+    if not confirm_installation(selected_agents, selected_skills, selected_stack):
         console.print("[yellow]Aborted.[/yellow]")
         raise typer.Exit(0)
 
-    # Create configuration
-    config = ProjectConfig(
-        version="1.0",
-        agents=selected_agents,
-        skills=selected_skills,
-        installed_at=datetime.now(),
-        cli_version=__version__,
-    )
+    # Initialize database if needed
+    if not db_exists(project_dir):
+        db_path = init_database(project_dir)
+        console.print(f"[green]Created {db_path}[/green]")
+    else:
+        console.print(f"[green]Updated {project_dir / 'engineering-team.db'}[/green]")
 
-    # Save configuration
-    config_path = save_config(config, project_dir)
-    console.print(f"[green]Created {config_path}[/green]")
+    # Get or create project record
+    project_id = get_or_create_project(project_dir)
+
+    # Save selections to database
+    set_stack(project_id, selected_stack, project_dir)
+    set_agents(project_id, selected_agents, project_dir)
+    set_skills(project_id, selected_skills, project_dir)
+    update_project_timestamp(project_id, project_dir)
 
     # Copy files
     if selected_agents:
