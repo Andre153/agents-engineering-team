@@ -9,10 +9,8 @@ from engineering_team.core.database import (
     CURRENT_SCHEMA_VERSION,
     add_agent,
     add_skill,
-    add_stack_item,
     clear_agents,
     clear_skills,
-    clear_stack,
     create_project,
     db_exists,
     get_agents,
@@ -21,17 +19,14 @@ from engineering_team.core.database import (
     get_project,
     get_schema_version,
     get_skills,
-    get_stack,
     init_database,
     remove_agent,
     remove_skill,
     set_agents,
     set_schema_version,
     set_skills,
-    set_stack,
     update_project_timestamp,
 )
-from engineering_team.core.schema import StackItem
 
 
 @pytest.fixture
@@ -127,75 +122,6 @@ class TestProjectRepository:
 
         # Timestamps should be different (or at least not earlier)
         assert project_after["updated_at"] >= project_before["updated_at"]
-
-
-class TestStackRepository:
-    """Tests for stack item CRUD operations."""
-
-    def test_add_and_get_stack(self, temp_dir: Path):
-        """Test adding and retrieving stack items."""
-        init_database(temp_dir)
-        project_id = get_or_create_project(temp_dir)
-
-        add_stack_item(project_id, "language", "Python", "3.12", temp_dir)
-        add_stack_item(project_id, "framework", "FastAPI", "0.109", temp_dir)
-
-        stack = get_stack(project_id, temp_dir)
-        assert len(stack) == 2
-
-        python = next((s for s in stack if s.name == "Python"), None)
-        assert python is not None
-        assert python.stack_type == "language"
-        assert python.version == "3.12"
-
-        fastapi = next((s for s in stack if s.name == "FastAPI"), None)
-        assert fastapi is not None
-        assert fastapi.stack_type == "framework"
-        assert fastapi.version == "0.109"
-
-    def test_add_stack_item_without_version(self, temp_dir: Path):
-        """Test adding stack item without version."""
-        init_database(temp_dir)
-        project_id = get_or_create_project(temp_dir)
-
-        add_stack_item(project_id, "cloud", "AWS", None, temp_dir)
-
-        stack = get_stack(project_id, temp_dir)
-        assert len(stack) == 1
-        assert stack[0].name == "AWS"
-        assert stack[0].version is None
-
-    def test_clear_stack(self, temp_dir: Path):
-        """Test clearing all stack items."""
-        init_database(temp_dir)
-        project_id = get_or_create_project(temp_dir)
-
-        add_stack_item(project_id, "language", "Python", "3.12", temp_dir)
-        add_stack_item(project_id, "framework", "FastAPI", None, temp_dir)
-
-        clear_stack(project_id, temp_dir)
-
-        stack = get_stack(project_id, temp_dir)
-        assert len(stack) == 0
-
-    def test_set_stack(self, temp_dir: Path):
-        """Test replacing all stack items."""
-        init_database(temp_dir)
-        project_id = get_or_create_project(temp_dir)
-
-        # Add initial items
-        add_stack_item(project_id, "language", "Python", "3.12", temp_dir)
-
-        # Replace with new items
-        new_stack = [
-            StackItem(stack_type="language", name="TypeScript", version="5.0"),
-            StackItem(stack_type="framework", name="React", version="18"),
-        ]
-        set_stack(project_id, new_stack, temp_dir)
-
-        stack = get_stack(project_id, temp_dir)
-        assert len(stack) == 2
-        assert all(s.name in ["TypeScript", "React"] for s in stack)
 
 
 class TestAgentRepository:

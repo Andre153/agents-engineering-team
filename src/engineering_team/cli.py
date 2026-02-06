@@ -6,6 +6,7 @@ from rich.console import Console
 from . import __version__
 from .commands.init import init_command
 from .commands.list import list_command
+from .commands.status import status_command
 from .commands.sync import sync_command
 
 
@@ -42,6 +43,7 @@ def main(
 app.command(name="init")(init_command)
 app.command(name="sync")(sync_command)
 app.command(name="list")(list_command)
+app.command(name="status")(status_command)
 
 
 if __name__ == "__main__":

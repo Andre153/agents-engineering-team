@@ -2,20 +2,9 @@
 
 from __future__ import annotations
 
-from typing import List, Literal, Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
-
-
-StackType = Literal["language", "framework", "database", "cloud"]
-
-
-class StackItem(BaseModel):
-    """A technology stack item (language, framework, database, or cloud service)."""
-
-    stack_type: StackType
-    name: str
-    version: Optional[str] = None
 
 
 class AgentInfo(BaseModel):

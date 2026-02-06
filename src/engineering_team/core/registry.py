@@ -19,6 +19,7 @@ CATEGORY_DISPLAY_NAMES = {
     "design": "Design & Documentation",
     "cloud": "Cloud & Infrastructure",
     "product": "Product",
+    "test-tools": "Test Tools",
 }
 
 
@@ -135,3 +136,16 @@ def build_registry(data_dir: Optional[Path] = None) -> Registry:
         agents=discover_agents(data_dir),
         categories=discover_skills(data_dir),
     )
+
+
+def resolve_skill_dependencies(
+    registry: Registry, agent_names: List[str]
+) -> Dict[str, List[str]]:
+    """Map each required skill to the agents that need it."""
+    deps: Dict[str, List[str]] = {}
+    for name in agent_names:
+        agent = registry.get_agent(name)
+        if agent:
+            for skill in agent.skills:
+                deps.setdefault(skill, []).append(name)
+    return deps

@@ -20,6 +20,7 @@ uv run engineering-team --help       # Show CLI help
 uv run engineering-team list         # List available agents/skills
 uv run engineering-team init         # Initialize a project
 uv run engineering-team sync         # Update installed files
+uv run engineering-team status       # Show project configuration
 uv run pytest                        # Run tests
 ```
 
@@ -31,7 +32,8 @@ src/engineering_team/
 ├── commands/
 │   ├── init.py         # Interactive project initialization
 │   ├── sync.py         # Re-copy agents/skills to project
-│   └── list.py         # Display available agents/skills
+│   ├── list.py         # Display available agents/skills
+│   └── status.py       # Show project configuration status
 ├── core/
 │   ├── schema.py       # Pydantic models (AgentInfo, SkillInfo, StackItem)
 │   ├── database.py     # SQLite database handling and repository layer
@@ -46,7 +48,8 @@ src/engineering_team/
         ├── frameworks/
         ├── databases/
         ├── design/
-        └── cloud/
+        ├── cloud/
+        └── test-tools/
 ```
 
 ## Key Files
@@ -87,11 +90,12 @@ src/engineering_team/
 
 ## Skill Categories
 
-- `languages` - Programming languages (typescript)
+- `languages` - Programming languages (python, typescript)
 - `frameworks` - Frameworks (flutter)
 - `databases` - Database skills (database-firestore)
 - `design` - Design/documentation (mermaid)
 - `cloud` - Cloud platforms (gcp-cloud-firebase)
+- `test-tools` - Testing tools (typescript-unit-testing)
 - `product` - Product skills (empty, for future use)
 
 ## Documentation

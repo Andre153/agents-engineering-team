@@ -6,8 +6,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Generator, List, Optional
 
-from .schema import StackItem
-
 DB_FILE_NAME = "engineering-team.db"
 CURRENT_SCHEMA_VERSION = 1
 
@@ -52,17 +50,6 @@ def init_database(project_dir: Optional[Path] = None) -> Path:
                 name TEXT,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
-            );
-
-            -- Project tech stack (languages, frameworks, versions)
-            CREATE TABLE IF NOT EXISTS project_stack (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                project_id INTEGER NOT NULL,
-                stack_type TEXT NOT NULL,
-                name TEXT NOT NULL,
-                version TEXT,
-                FOREIGN KEY (project_id) REFERENCES projects(id),
-                UNIQUE(project_id, stack_type, name)
             );
 
             -- Installed agents
@@ -195,55 +182,6 @@ def update_project_timestamp(project_id: int, project_dir: Optional[Path] = None
         cursor.execute(
             "UPDATE projects SET updated_at = ? WHERE id = ?",
             (now, project_id)
-        )
-        conn.commit()
-
-
-# =============================================================================
-# Stack Repository
-# =============================================================================
-
-def add_stack_item(
-    project_id: int,
-    stack_type: str,
-    name: str,
-    version: Optional[str] = None,
-    project_dir: Optional[Path] = None
-) -> None:
-    """Add a stack item to the project."""
-    with get_connection(project_dir) as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            INSERT OR REPLACE INTO project_stack (project_id, stack_type, name, version)
-            VALUES (?, ?, ?, ?)
-            """,
-            (project_id, stack_type, name, version)
-        )
-        conn.commit()
-
-
-def get_stack(project_id: int, project_dir: Optional[Path] = None) -> List[StackItem]:
-    """Get all stack items for a project."""
-    with get_connection(project_dir) as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT stack_type, name, version FROM project_stack WHERE project_id = ?",
-            (project_id,)
-        )
-        return [
-            StackItem(stack_type=row["stack_type"], name=row["name"], version=row["version"])
-            for row in cursor.fetchall()
-        ]
-
-
-def clear_stack(project_id: int, project_dir: Optional[Path] = None) -> None:
-    """Remove all stack items for a project."""
-    with get_connection(project_dir) as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            "DELETE FROM project_stack WHERE project_id = ?",
-            (project_id,)
         )
         conn.commit()
 
@@ -394,14 +332,3 @@ def set_skills(
     clear_skills(project_id, project_dir)
     for name in skill_names:
         add_skill(project_id, name, project_dir)
-
-
-def set_stack(
-    project_id: int,
-    stack_items: List[StackItem],
-    project_dir: Optional[Path] = None
-) -> None:
-    """Set the stack for a project, replacing any existing items."""
-    clear_stack(project_id, project_dir)
-    for item in stack_items:
-        add_stack_item(project_id, item.stack_type, item.name, item.version, project_dir)

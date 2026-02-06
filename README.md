@@ -25,6 +25,9 @@ uv run engineering-team list
 
 # Update installed agents/skills to latest versions
 uv run engineering-team sync
+
+# Show installed agents/skills for current project
+uv run engineering-team status
 ```
 
 ## Commands
@@ -34,7 +37,7 @@ uv run engineering-team sync
 Interactive setup that:
 1. Prompts you to select agents
 2. Prompts you to select skills by category
-3. Creates `engineering-team.json` in your project
+3. Creates `engineering-team.db` database in your project
 4. Copies selected files to `.claude/agents/` and `.claude/skills/`
 
 ```bash
@@ -63,32 +66,34 @@ uv run engineering-team list --agents  # Agents only
 uv run engineering-team list --skills  # Skills only
 ```
 
+### `engineering-team status`
+
+Shows currently installed agents and skills for a project.
+
+```bash
+uv run engineering-team status
+uv run engineering-team status -d /path/to/project  # Specify project directory
+```
+
 ## Configuration
 
-The `engineering-team.json` file stores your project's configuration:
-
-```json
-{
-  "version": "1.0",
-  "agents": ["backend-architect", "senior-backend-developer"],
-  "skills": ["typescript", "mermaid"],
-  "installedAt": "2026-02-02T12:00:00Z",
-  "cliVersion": "0.1.0"
-}
-```
+The `engineering-team.db` SQLite database stores your project's configuration, including selected agents, skills, and project metadata. The database is created in your project root when you run `engineering-team init`.
 
 ## Available Agents
 
 | Agent | Description |
 |-------|-------------|
 | `backend-architect` | Senior backend architect for system design, technical planning, and architecture diagrams. Read-only, hands off to developers. |
-| `senior-backend-developer` | Senior polyglot backend developer for API development, DDD, and vertical slice architecture. |
+| `code-reviewer` | Senior code reviewer for thorough, constructive code reviews. Identifies bugs, security issues, and provides actionable feedback. |
 | `mobile-architect` | Senior mobile architect for cross-platform system design and mobile architecture. |
+| `senior-backend-developer` | Senior polyglot backend developer for API development, DDD, and vertical slice architecture. |
 | `senior-mobile-developer` | Senior mobile developer for Flutter/React Native implementation. |
+| `unit-test-engineer` | Polyglot unit test engineer specializing in business-readable tests with BDD-style naming. |
 
 ## Available Skills
 
 ### Languages
+- **python** - Python development with type hints, dataclasses, Pydantic, async patterns
 - **typescript** - TypeScript development patterns, type system, async programming, testing
 
 ### Frameworks
@@ -102,6 +107,9 @@ The `engineering-team.json` file stores your project's configuration:
 
 ### Cloud & Infrastructure
 - **gcp-cloud-firebase** - GCP and Firebase services (Cloud Run, Auth, Storage, Functions)
+
+### Test Tools
+- **typescript-unit-testing** - TypeScript unit testing with Jest/Vitest, mocking patterns, async testing
 
 ## Using Skills with Agents
 
@@ -133,7 +141,7 @@ See [docs/local.md](docs/local.md) for development setup instructions.
 ├── .python-version             # Python version pin (3.12)
 ├── src/engineering_team/       # CLI source code
 │   ├── cli.py                  # Main Typer CLI
-│   ├── commands/               # init, sync, list commands
+│   ├── commands/               # init, sync, list, status commands
 │   ├── core/                   # Config, registry, copier
 │   ├── ui/                     # Interactive prompts
 │   └── data/                   # Bundled agents and skills
